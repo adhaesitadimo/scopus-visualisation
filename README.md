@@ -8,3 +8,5 @@ Data acquiring (<i>scraping</i> part):
 2. <i>xml_parser.py</i> parses available dumps for ID, title, authors, publication date, publisher, volume, number of pages and citations and collects them into Pandas dataset
 
 #TODO TODO TODOO
+
+The dataset can be found here (consists of ~1M unique articles): https://drive.google.com/open?id=1eNebs6SFLqtqIGS-glKSXif7VH9wWnLa
