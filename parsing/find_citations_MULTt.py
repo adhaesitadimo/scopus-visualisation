@@ -25,20 +25,14 @@ def get_citations_for_page(url, buf, artid):
     return citations
 
 
-if __name__ == '__main__':
-    parser = ArgumentParser(description='Scopus citations finder')
-    parser.add_argument('start', help='dataset citaion parsing start', type=int)
-    parser.add_argument('finish', help='dataset citaion parsing finish', type=int)
-    parser.add_argument('dump_name', help='citations dump file name')
-
-    args = parser.parse_args()
-    articles = pd.read_csv('./articles.csv')
+def citations(dataset_name, cit_dump_name, start, finish):
+    articles = pd.read_csv(dataset_name)
     citation_ids = articles['citationID'].values
     artids = articles['scopusID'].values
     num_cores = 4
-    with open(args.dump_name, 'w') as citations:
+    with open(cit_dump_name, 'w') as citations:
         batch = num_cores * 4
-        for j in range(args.start, args.finish, batch):
+        for j in range(start, finish, batch):
             buf=[]
             Parallel(n_jobs=num_cores, backend="threading")(
                 delayed(get_citations_for_page)(citation_ids[i],buf, artids[i]) for i in range(j, j + batch))
