@@ -28,7 +28,7 @@ def download():
     print(file_format)
     Data.download_graph(file_format)
     try:
-        return send_file(os.path.join(os.cwd, 'output.'+file_format), as_attachment=True)
+        return send_file(os.path.join(os.getcwd(), 'output.'+file_format), as_attachment=True)
     except Exception as e:
         return str(e)
 

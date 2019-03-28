@@ -165,10 +165,10 @@ class Dataset():
 
     def download_graph(self, file_format):
         if file_format == 'graphml':
-            nx.write_graphml(self.nx_graph, os.path.join(os.cwd, 'output.graphml'))
+            nx.write_graphml(self.nx_graph, os.path.join(os.getcwd(), 'output.graphml'))
         elif file_format == 'gexf':
-            nx.write_gexf(self.nx_graph, os.path.join(os.cwd, 'output.gexf'))
+            nx.write_gexf(self.nx_graph, os.path.join(os.getcwd(), 'output.gexf'))
         elif file_format == 'gml':
-            nx.write_gml(self.nx_graph, os.path.join(os.cwd, 'output.gml'))
+            nx.write_gml(self.nx_graph, os.path.join(os.getcwd(), 'output.gml'))
         elif file_format == 'gpickle':
-            nx.write_gpickle(self.nx_graph, os.path.join(os.cwd, 'output.gpickle'))
+            nx.write_gpickle(self.nx_graph, os.path.join(os.getcwd(), 'output.gpickle'))
