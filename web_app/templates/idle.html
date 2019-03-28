@@ -1,0 +1,202 @@
+<html>
+<head>
+<style type="text/css">
+  #container {
+    max-width: 100%;
+    height: 100%;
+    margin: auto;
+  }
+
+
+  body{
+    margin: 0px;
+  }
+  #settings {
+    position: absolute;
+    right: 0px;
+    z-index: 999;
+    padding: 5px;
+    background: white;
+    border-left: 2px solid black;
+    border-bottom: 2px solid black;
+    border-radius: 0px 0px 0px 10px;
+    padding-right: 10px;
+    box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19);
+  }
+  #stats {
+    float: left;
+    position: absolute;
+    background: white;
+    left: 0px;
+    z-index: 999;
+    padding: 5px;
+    border-right: 2px solid black;
+    border-bottom: 2px solid black;
+    border-radius: 0px 0px 10px 0px;
+    box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19);
+  }
+  #download {
+    position: absolute;
+    background: white;
+    left: 50%;
+    margin-left: -50px;
+    z-index: 999;
+    padding: 2px;
+    border-right: 2px solid black;
+    border-left: 2px solid black;
+    border-bottom: 2px solid black;
+    border-radius: 0px 0px 10px 10px;
+    box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19);
+  }
+  form {
+    margin: 5px;
+  }
+</style>
+</head>
+<body>
+
+  <div id="stats">
+    Total Nodes: {{total_nodes}} <br>
+    Total Edges: {{total_edges}} <br>
+    <br><br>
+    Nodes: {{n_nodes}} <br>
+    Edges: {{n_edges}}
+  </div>
+  <div id="settings">
+    <form action="/">
+      From year:<br>
+      <input type="text" name="from_year" value="{{settings.from_year}}">
+      <br>
+      To year:<br>
+      <input type="text" name="to_year" value="{{settings.to_year}}">
+      <br>
+      Percentage of articles:<br>
+      <input type="text" name="coef" value="{{settings.coef}}">
+      <br>
+      Max components to show:<br>
+      <input type="text" name="components_num" value="{{settings.components_num}}">
+      <br><br>
+      <input type="submit" value="Generate Graph">
+    </form>
+  </div>
+
+
+  <div id="download" align="center">
+   <form action="/download">
+     Choose format:
+     <select name="format">
+       <option value="graphml">GraphML</option>
+       <option value="gexf">GEXF</option>
+       <option value="gml">GML</option>
+       <option value="gpickle">Pickle</option>
+     </select>
+     <br><br>
+
+     <input type="submit" value="Download full graph">
+   </form>
+  </div>
+
+<div id="container"></div>
+
+
+<script src="{{ url_for('static',filename='sigma.min.js') }}"></script>
+<script src="{{ url_for('static',filename='sigma.js/plugins/sigma.parsers.json/sigma.parsers.json.js') }}"></script>
+<script src="{{ url_for('static',filename='sigma.js/plugins/sigma.layout.forceAtlas2/worker.js') }}"></script>
+<script src="{{ url_for('static',filename='sigma.js/plugins/sigma.layout.forceAtlas2/supervisor.js') }}"></script>
+<script>
+      sigma.classes.graph.addMethod('neighbors', function(nodeId) {
+        var k,
+            neighbors = {},
+            index = this.allNeighborsIndex[nodeId] || {};
+
+        for (k in index)
+          neighbors[k] = this.nodesIndex[k];
+
+        return neighbors;
+      });
+      graph = {{data | safe}};
+      var s = new sigma(
+        {
+
+        container: 'container',
+        renderer: {
+            container: document.getElementById('container'),
+            type: 'canvas',
+          },
+        settings: {
+            drawLabels: false,
+            labelThreshold: 10000,
+            clone: false,
+            minEdgeSize: 0.1,
+            maxEdgeSize: 1,
+            minNodeSize: 0.1,
+            maxNodeSize: 2,
+            zoomMax: 50,
+            zoomMin: 0.01,
+            // hideEdgesOnMove: true,
+            // edgeColor: 'default',
+            // defaultEdgeColor: "rgba(192, 192, 192, 0.9)",
+            batchEdgesDrawing: true,
+          }
+        });
+
+          // s.startForceAtlas2({worker: true, barnesHutOptimize: true});
+
+          // window.setTimeout(function() {s.killForceAtlas2()}, 30000);
+
+          s.graph.read(graph);
+          s.graph.nodes().forEach(function(n) {
+            n.originalColor = n.color;
+          });
+          s.graph.edges().forEach(function(e) {
+            e.originalColor = e.color;
+          });
+
+          // When a node is clicked, we check for each node
+          // if it is a neighbor of the clicked one. If not,
+          // we set its color as grey, and else, it takes its
+          // original color.
+          // We do the same for the edges, and we only keep
+          // edges that have both extremities colored.
+          s.bind('clickNode', function(e) {
+            var nodeId = e.data.node.id,
+                toKeep = s.graph.neighbors(nodeId);
+            toKeep[nodeId] = e.data.node;
+
+            s.graph.nodes().forEach(function(n) {
+              if (toKeep[n.id])
+                n.color = n.originalColor;
+              else
+                n.color = '#eee';
+            });
+
+            s.graph.edges().forEach(function(e) {
+              if (toKeep[e.source] && toKeep[e.target])
+                e.color = e.originalColor;
+              else
+                e.color = '#eee';
+            });
+
+            // Since the data has been modified, we need to
+            // call the refresh method to make the colors
+            // update effective.
+            s.refresh();
+          });
+
+          // When the stage is clicked, we just color each
+          // node and edge with its original color.
+
+            s.graph.nodes().forEach(function(n) {
+              n.color = n.originalColor;
+            });
+
+            s.graph.edges().forEach(function(e) {
+              e.color = e.originalColor;
+            });
+
+            // Same as in the previous event:
+            s.refresh();
+
+    </script>
+</body>
+</html>
